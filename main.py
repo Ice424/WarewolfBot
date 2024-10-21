@@ -18,12 +18,12 @@ bot = commands.InteractionBot(
     command_sync_flags=command_sync_flags,
 )
 
-
 class Game:
+    '''Game class for storing global variables'''
     def __init__(self):
         self.reset()
-
     def reset(self):
+        '''resets all variables'''
         self.author = None
         self.members = []
         self.nicks = []
@@ -31,8 +31,8 @@ class Game:
         self.game_running = False
         self.numwolves = 0
         self.roles = {}  # Store player roles for easy access
-
     def add_member(self, member):
+        '''adds a member to the member list'''
         if member not in self.members:
             self.members.append(member)
             self.nicks.append(member.name)
@@ -50,12 +50,11 @@ async def start(inter, numwolves: int):
         game.numwolves = numwolves
         game.author = inter.author
         game.channel = inter.channel
-        game.members = []
         # reply's to original message to allow people to enter
         await inter.response.send_message("Press button to enter",
             components=[
                 disnake.ui.Button(
-                    label="Join", style=disnake.ButtonStyle.success, custom_id="join")
+                    label="Join", style=disnak e.ButtonStyle.success, custom_id="join")
             ],)
         # dms user with button to   
         await inter.author.send("Press button to start",
@@ -123,8 +122,19 @@ async def day_phase():
     await check_game_status()
 
 async def collect_votes(voters, choices, phase):
-
+    if phase == "day":
+        msg = "Vote for a player to eliminate"
+    
+    elif phase = "werewolf":
+        msg = "Vote for a player to kill"
+    for player in voters:
+        voting_msg = await player.send(msg,
+            components=[
+                disnake.ui.StringSelect(custom_id="voting")])
+    
+    await voting_msg.delete()
     return target
+
 
 
 
