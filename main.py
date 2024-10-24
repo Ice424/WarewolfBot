@@ -16,7 +16,7 @@ command_sync_flags = commands.CommandSyncFlags.default()
 command_sync_flags.sync_commands_debug = True
 
 bot = commands.InteractionBot(
-    test_guilds=[1012004094564646992],
+    test_guilds=[1012004094564646992, 873251935602499654],
     command_sync_flags=command_sync_flags,
 )
 
@@ -29,7 +29,7 @@ class Game:
         self.author = None
         self.members = []
         self.alive = []
-        self.nicks = []
+        self.names = []
         self.channel = None
         self.game_running = False
         self.numwolves = 0
@@ -44,7 +44,7 @@ class Game:
         self.author = None
         self.members = []
         self.alive = []
-        self.nicks = []
+        self.names = []
         self.channel = None
         self.game_running = False
         self.numwolves = 0
@@ -58,7 +58,7 @@ class Game:
         '''Adds a member to the game'''
         if member not in self.members:
             self.members.append(member)
-            self.nicks.append(member.name)
+            self.names.append(member.name)
             self.alive.append(member)
 
     def reset_votes(self):
@@ -69,7 +69,7 @@ class Game:
     def remove_member(self, member):
         '''Adds a member to the game'''
         self.alive.remove(member)
-        self.nicks.remove(member.name)
+        self.names.remove(member.name)
         if member in self.roles["werewolf"]:
             self.roles["werewolf"].remove(member)
         else:
@@ -82,12 +82,7 @@ game = Game()
 @bot.slash_command(name="reset", description="Reset's the werewolf game DOES NOT STOP IT")
 async def reset(inter):
     game.reset()
-    await inter.send("Game stopped", ephemeral=True)
-
-
-@bot.slash_command(name="test")
-async def test(inter):
-    await initiate_votes([inter.author], [1, 2, 3, 4], 30)
+    await inter.send("Game variable reset", ephemeral=True)
 
 
 @bot.slash_command(description="Start the werewolf game")
@@ -128,8 +123,9 @@ async def handle_button_click(inter: disnake.MessageInteraction):
             return
         # Add the player to the game
         game.add_member(inter.author)
-        await inter.send(f"You have joined! Current players: {game.nicks}", ephemeral=True)
-
+        await inter.send(f"You have joined! Current players: {game.names}", ephemeral=True)
+        print(f"{inter.author} Joined")
+        
     elif inter.data.custom_id == "start" and inter.author == game.author:
         if game.game_running:
             await inter.send("The game is already running.", ephemeral=True)
@@ -170,6 +166,9 @@ async def assign_roles(members, numwolves):
         else:
             game.roles["villager"].append(player)
             await player.send("You are a villager")
+    print(f"members {game.members}")
+    print(f"names {game.names}")
+    print(f"roles {game.roles}")
 
 
 async def night_phase():
@@ -199,8 +198,8 @@ async def initiate_votes(voters, choices, time):
             msg,
             components=[
                 disnake.ui.StringSelect(custom_id="voting",
-                                        options=[disnake.SelectOption(label=str(choice.nick),
-                                        value=str(choice.nick)) for choice in choices])
+                                        options=[disnake.SelectOption(label=str(choice.name),
+                                        value=str(choice.name)) for choice in choices])
             ]
         )
         voting_messages.append(voting_msg)  # Store the message object
@@ -260,12 +259,12 @@ async def process_votes(votes):
 
         if game.phase == "night":
             await dmplayers(game.voters, f"You have slain {eliminated}")
-            await game.members[game.nicks.index(eliminated)].send("The werewolf's have killed you")
+            await game.members[game.names.index(eliminated)].send("The werewolf's have killed you")
         else:
             await dmplayers(game.voters, f"{eliminated} has been voted out")
-            await game.members[game.nicks.index(eliminated)].send("The villager's voted you out")
+            await game.members[game.names.index(eliminated)].send("The villager's voted you out")
 
-        game.remove_member(game.members[game.nicks.index(eliminated)])
+        game.remove_member(game.members[game.names.index(eliminated)])
 
 
 async def check_game_status():
